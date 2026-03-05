@@ -1,7 +1,15 @@
-# TARX × Palantir AIP — Local Inference Connector
+# tarx-palantir-connector
 
-Run Palantir AIP Logic functions against a local LLM via TARX.
-Zero cloud exposure. Full DDIL capability. One line change.
+Open-source connector: TARX local inference <> Palantir AIP Logic.
+Routes AIP Logic webhook calls to local LLM via TARX daemon.
+Zero cloud exposure. DDIL-capable.
+
+## Status
+
+- GitHub: https://github.com/tarx-ai/tarx-palantir-connector (public)
+- License: Apache 2.0
+
+## One line change
 
 ```typescript
 // Before: cloud inference
@@ -11,103 +19,46 @@ const client = new OpenAI({ baseURL: "https://aip.palantir.com/v1" })
 const client = new OpenAI({ baseURL: "http://localhost:11435/v1", apiKey: "none" })
 ```
 
-## The Gap
-
-Palantir AIP is hub-and-spoke. Powerful when connected. 
-Limited when:
-- Connectivity is denied, degraded, intermittent, or limited (DDIL)
-- Data classification prevents cloud transmission
-- Edge hardware isn't available
-
-TARX runs a local inference server on any device. 
-It speaks the OpenAI API spec. AIP Logic calls it with one URL change.
-Results sync to Foundry Ontology via OSDK subscriptions when connected.
-
 ## Architecture
 
 ```
-PALANTIR FOUNDRY
-  AIP Logic → Data Connection source "tarx-local"
-                → localhost:11435 (TARX runtime)
-                → inference on device, zero exfiltration
-  OSDK Subscription → syncs results to Ontology when connected
-
-TARX LOCAL RUNTIME  
-  llama-server @ localhost:11435
-  SQLite cache (Ontology mirror, offline)
-  Sync queue (offline → online reconciliation)
-  Mesh network (peer compute when needed)
+Palantir Foundry AIP Logic
+    → Data Connection source "tarx-local"
+    → localhost:11435/v1/chat/completions (OpenAI-compatible)
+    → TARX daemon (inference on device, zero exfiltration)
+    → Ontology sync via OSDK when connected
 ```
 
-## Setup
+## Foundry instance
 
-### 1. Install TARX
+- Org: tarx.usw-3.palantirfoundry.com
+- Ontology: TARX Ontology (ontology-6d7a3ca3-f4a1-4736-9a1d-34e3121fb530)
+- Objects: 11 aviation example objects (ExampleAirport, ExampleFlight, etc.)
 
-```bash
-curl -fsSL tarx.com/install | sh
-```
+## Custom object types (pending)
 
-Verify:
-```bash
-curl http://localhost:11435/health
-# {"status":"ok"}
-```
+- TarxInferenceJob — audit trail for every inference
+- TarxMeshNode — mesh peer topology in Foundry workshop
+- TarxRouteOptimization — QAOA results linked to ExampleRoute
 
-### 2. Configure Palantir Data Connection
+## Key files
 
-1. Foundry → Data Connection → Add Source → REST API
-2. Base URL: `http://localhost:11435`
-3. Name: `tarx-local`
-4. See `config/data-connection-source.json` for full config
-
-### 3. Call from AIP Logic
-
-```typescript
-const client = new OpenAI({
-  baseURL: "http://localhost:11435/v1",
-  apiKey: "none",
-})
-
-const response = await client.chat.completions.create({
-  model: "tarx-qwen2.5-7b",
-  messages: [{ role: "user", content: prompt }],
-})
-```
-
-See `examples/` for complete patterns including error handling,
-DDIL fallback, OSDK offline sync, and mesh augmentation.
-
-## Use Cases
-
-**Defense & Intelligence** — DDIL ops, air-gapped networks, 
-classified data that cannot touch cloud LLMs.
-
-**Financial Services** — PII, trading strategies, client data 
-under GDPR/CCPA. Local inference, Foundry orchestration.
-
-**Healthcare** — PHI under HIPAA. Clinical notes and records 
-never leave the device.
-
-**Critical Infrastructure** — Offline-capable operations with 
-peer mesh fallback.
+| File | Purpose |
+|------|---------|
+| examples/aip-logic-local-inference.ts | AIP Logic function with TARX |
+| examples/osdk-offline-sync.ts | Offline-first sync via lohi-ts |
+| config/data-connection-source.json | REST API source config |
 
 ## DDIL Matrix
 
 | Scenario | Palantir AIP (cloud) | TARX Local | TARX + Mesh |
-|---|---|---|---|
-| Full connectivity | ✅ | ✅ | ✅ |
-| Degraded | ⚠️ | ✅ | ✅ |
-| No connectivity | ❌ | ✅ | ✅ |
-| Air-gapped | ❌ | ✅ | ✅ |
-| Classified data | ❌ | ✅ | ✅ |
-
-## License
-
-Apache 2.0
+|----------|---------------------|------------|-------------|
+| Full connectivity | Yes | Yes | Yes |
+| Degraded | Partial | Yes | Yes |
+| No connectivity | No | Yes | Yes |
+| Air-gapped | No | Yes | Yes |
 
 ## Disclaimer
 
-Not affiliated with or endorsed by Palantir Technologies, Inc.
-Integration uses Palantir's public Data Connection API and OSDK.
-Palantir, AIP, Foundry, and OSDK are trademarks of 
-Palantir Technologies, Inc.
+Not affiliated with or endorsed by Palantir Technologies.
+Integration via Palantir's public Data Connection API and OSDK.
