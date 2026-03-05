@@ -11,6 +11,8 @@
   "peerDependencies": {
     "@foundry/functions-api": "*",
     "@osdk/client": "*",
+    "@osdk/react": "*",
+    "@palantir/lohi-ts": "*",
     "openai": "^4.0.0"
   }
 }
