@@ -1,0 +1,10 @@
+{
+  "sourceType": "REST_API",
+  "name": "tarx-local",
+  "displayName": "TARX Local Runtime",
+  "baseUrl": "http://localhost:11435",
+  "healthEndpoint": "/health",
+  "authType": "NONE",
+  "description": "Local LLM inference via TARX. Zero exfiltration. DDIL-capable.",
+  "networkPolicy": "localhost-allowed"
+}

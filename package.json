@@ -1,0 +1,16 @@
+{
+  "name": "tarx-palantir-connector",
+  "version": "1.0.0",
+  "description": "TARX local inference connector for Palantir AIP",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "better-sqlite3": "^9.0.0"
+  },
+  "peerDependencies": {
+    "@foundry/functions-api": "*",
+    "@osdk/client": "*",
+    "openai": "^4.0.0"
+  }
+}
